@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -11,13 +13,13 @@ using WebApiTest.Services;
 namespace WebApiTest.Web.Controllers
 {
     [ApiController]
-    [Route( "[controller]" )]
+    [Route("[controller]")]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderItemsService _orderItemsService;
         private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController( IOrderItemsService orderItemsService, ILogger<OrdersController> logger )
+        public OrdersController(IOrderItemsService orderItemsService, ILogger<OrdersController> logger)
         {
             _logger = logger;
             _orderItemsService = orderItemsService;
@@ -30,9 +32,45 @@ namespace WebApiTest.Web.Controllers
         /// <returns></returns>
         [Route("{orderID:int}")]
         [HttpGet]
-        public OrderItemsModel Get( int orderID )
+        public ActionResult<OrderItemsModel> Get(int orderID)
         {
-            return _orderItemsService.Get( orderID );
+            var resp = _orderItemsService.Get(orderID);
+            if (resp == null)
+            {
+
+
+                var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new StringContent(string.Format("No Order found with ID = {0}", orderID)),
+                    ReasonPhrase = "Order Not Found"
+                };
+
+                return NotFound();
+
+            }
+            return resp;
+        }
+
+
+        [Route("{orderID:int}")]
+        [HttpDelete]
+        public ActionResult<string> Delete(int orderID)
+        {
+            var resp = _orderItemsService.Delete(orderID);
+            if (resp == false)
+            {
+
+
+                var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new StringContent(string.Format("No Order found with ID = {0}", orderID)),
+                    ReasonPhrase = "Order Not Found"
+                };
+
+                return NotFound();
+
+            }
+            return "Order Deleted Successful";
         }
 
         /// <summary>
@@ -43,16 +81,32 @@ namespace WebApiTest.Web.Controllers
         /// <returns></returns>
         [Route("{orderID:int}")]
         [HttpPost]
-        public Task<short> Post( int orderID, OrderItemModel item )
+        public Task<short> Post(int orderID, OrderItemModel item)
         {
             try
             {
-                return _orderItemsService.AddAsync( orderID, item );
+                return _orderItemsService.AddAsync(orderID, item);
             }
-            catch ( ValidationException ve )
+            catch (ValidationException ve)
             {
-                throw new BadHttpRequestException( ve.Message );
+                throw new BadHttpRequestException(ve.Message);
             }
         }
+
+
+
+        //  [Route("{orderID:int}")]
+        //[HttpPost]
+        //public Task<short> Post(OrderItemModel item)
+        //{
+        //    try
+        //    {
+        //        return _orderItemsService.AddAsync(item);
+        //    }
+        //    catch (ValidationException ve)
+        //    {
+        //        throw new BadHttpRequestException(ve.Message);
+        //    }
+        //}
     }
 }

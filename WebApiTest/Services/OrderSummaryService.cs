@@ -47,7 +47,7 @@ namespace WebApiTest.Services
                 summary.Totals.Tax = subTotal * TaxRate;
                 summary.Totals.Shipping = Shipping;
 
-                summary.OrderingPersonID = personIDs.Single();
+                summary.OrderingPersonID = personIDs.FirstOrDefault();
 
                 summary.OrderPersonIDs = personIDs;
             }
